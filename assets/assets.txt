@@ -1,0 +1,12 @@
+libgdx.png
+shader/demo2/demo.frag
+shader/demo2/demo.vert
+shader/test_color/test_color.frag
+shader/test_color/test_color.vert
+ui/font-list.fnt
+ui/font-subtitle.fnt
+ui/font-window.fnt
+ui/font.fnt
+ui/uiskin.atlas
+ui/uiskin.json
+ui/uiskin.png
