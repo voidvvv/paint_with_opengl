@@ -15,7 +15,7 @@ import com.badlogic.gdx.math.Vector2;
 import java.nio.Buffer;
 import java.nio.ShortBuffer;
 
-public class GoldTextureShaderRender{
+public class GoldTextureShaderRender implements Shader{
     private VertexBufferObject vbo;
     private float goldIntensity = 0.7f;
     private float glossiness = 0.5f;

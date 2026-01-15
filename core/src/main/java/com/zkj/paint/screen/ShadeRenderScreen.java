@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -19,8 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.zkj.paint.shader.GoldTextureRender;
-import com.zkj.paint.shader.ShaderRender;
+import com.zkj.paint.shader.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +31,8 @@ public class ShadeRenderScreen implements Screen {
     private ShaderRender currentShaderRender;
     private Table uiTable;
     Camera camera;
-    TextArea ta ;
+    TextArea ta;
+
     @Override
     public void show() {
         // load all shader
@@ -75,7 +74,7 @@ public class ShadeRenderScreen implements Screen {
             currentShaderRender = shaderRenders.get(0);
             shaderSelectBox.setSelected(currentShaderRender);
         }
-        ta = new TextArea("", skin){
+        ta = new TextArea("", skin) {
             @Override
             public void act(float delta) {
                 this.setText(shaderRenders.size() + "");
@@ -90,6 +89,20 @@ public class ShadeRenderScreen implements Screen {
     }
 
     private void initShaders() {
+        Texture testTexture;
+        try {
+            testTexture = new Texture(Gdx.files.internal("libgdx.png"));
+        } catch (Exception e) {
+            // 如果没有默认纹理，创建一个简单的彩色纹理
+            Pixmap pixmap = new Pixmap(256, 256, Pixmap.Format.RGBA8888);
+            pixmap.setColor(0.2f, 0.4f, 0.8f, 1.0f);
+            pixmap.fill();
+            pixmap.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+            pixmap.drawLine(0, 0, 255, 255);
+            pixmap.drawLine(255, 0, 0, 255);
+            testTexture = new Texture(pixmap);
+            pixmap.dispose();
+        }
         // 添加镀金效果的渲染器
         try {
             // 加载着色器文件
@@ -103,26 +116,11 @@ public class ShadeRenderScreen implements Screen {
             if (!goldShaderProgram.isCompiled()) {
                 Gdx.app.error("Gold Shader", "Shader compilation failed: " + goldShaderProgram.getLog());
             } else {
-                // 加载测试纹理
-                Texture testTexture;
-                try {
-                    testTexture = new Texture(Gdx.files.internal("libgdx.png"));
-                } catch (Exception e) {
-                    // 如果没有默认纹理，创建一个简单的彩色纹理
-                    Pixmap pixmap = new Pixmap(256, 256, Pixmap.Format.RGBA8888);
-                    pixmap.setColor(0.2f, 0.4f, 0.8f, 1.0f);
-                    pixmap.fill();
-                    pixmap.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-                    pixmap.drawLine(0, 0, 255, 255);
-                    pixmap.drawLine(255, 0, 0, 255);
-                    testTexture = new Texture(pixmap);
-                    pixmap.dispose();
-                }
-
+                Shader shader = new GoldTextureShaderRender(goldShaderProgram);
                 // 创建镀金纹理渲染器
-                GoldTextureRender goldTextureRender = new GoldTextureRender(goldShaderProgram, testTexture);
-                goldTextureRender.setName("Gold Texture Shader");
-                shaderRenders.add(goldTextureRender);
+                ShaderTextureRender shaderTextureRender = new ShaderTextureRender(shader, testTexture);
+                shaderTextureRender.setName("Gold Texture Shader");
+                shaderRenders.add(shaderTextureRender);
             }
         } catch (Exception e) {
             Gdx.app.error("Gold Shader", "Error creating gold texture shader: " + e.getMessage());
@@ -130,110 +128,30 @@ public class ShadeRenderScreen implements Screen {
 
         // 加载原始的颜色渐变着色器
         try {
-            String vertexShader = Gdx.files.internal("shader/test_color/test_color.vert").readString();
-            String fragmentShader = Gdx.files.internal("shader/test_color/test_color.frag").readString();
-
-            // 创建着色器程序
-            ShaderProgram shaderProgram = new ShaderProgram(vertexShader, fragmentShader);
-
-            // 检查着色器程序是否编译成功
-            if (!shaderProgram.isCompiled()) {
-                Gdx.app.error("Shader", "Shader compilation failed: " + shaderProgram.getLog());
-                return;
-            }
-
             // 创建着色器渲染实例
-            ShaderRender colorGradientRender = new ShaderRender(shaderProgram) {
-                // VBO实现，提高性能
-                private int vboId; // VBO对象ID
-                private boolean vboInitialized = false;
-
-                @Override
-                public void create() {
-                    // 初始化VBO
-                    initVBO();
-                }
-
-                private void initVBO() {
-                    if (vboInitialized) return;
-
-                    // 创建VBO
-                    vboId = Gdx.gl.glGenBuffer();
-
-                    // 定义标准化设备坐标的全屏四边形顶点
-                    float[] vertices = {
-                        -1.0f, -1.0f,
-                        1.0f, -1.0f,
-                        -1.0f, 1.0f,
-                        1.0f, 1.0f
-                    };
-
-                    // 绑定VBO并上传数据到GPU
-                    Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, vboId);
-                    Gdx.gl.glBufferData(
-                        GL20.GL_ARRAY_BUFFER,
-                        vertices.length * Float.BYTES,
-                        BufferUtils.newFloatBuffer(vertices.length).put(vertices).flip(),
-                        GL20.GL_STATIC_DRAW // 数据不会频繁变化
-                    );
-
-                    // 解绑VBO
-                    Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
-
-                    vboInitialized = true;
-                }
-
-                @Override
-                public void render(float delta, Matrix4 pro) {
-                    getShaderProgram().begin();
-
-                    // 设置uniform变量
-                    getShaderProgram().setUniformf("u_time", Gdx.graphics.getFrameId() * 0.1f);
-                    getShaderProgram().setUniformf("u_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-                    // 使用单位矩阵，因为我们使用标准化设备坐标
-                    getShaderProgram().setUniformMatrix("u_projTrans", new Matrix4());
-
-                    // 启用顶点属性
-                    int positionLocation = getShaderProgram().getAttributeLocation("a_position");
-                    getShaderProgram().enableVertexAttribute(positionLocation);
-
-                    // 绑定VBO并设置顶点属性指针
-                    Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, vboId);
-                    Gdx.gl.glVertexAttribPointer(
-                        positionLocation,    // 属性位置
-                        2,                   // 每个属性的组件数
-                        GL20.GL_FLOAT,       // 数据类型
-                        false,               // 是否归一化
-                        0,                   // 步长
-                        0                    // VBO中的偏移量（因为只有位置数据）
-                    );
-
-                    // 绘制四边形
-                    Gdx.gl.glDrawArrays(GL20.GL_TRIANGLE_STRIP, 0, 4);
-
-                    // 禁用顶点属性并解绑VBO
-                    getShaderProgram().disableVertexAttribute(positionLocation);
-                    Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
-
-                    getShaderProgram().end();
-                }
-
-                @Override
-                public void dispose() {
-                    super.dispose();
-                    // 当着色器渲染器被销毁时清理VBO
-                    if (vboInitialized) {
-                        int[] vbos = {vboId};
-                        Gdx.gl.glDeleteBuffer(vboId);
-                        vboInitialized = false;
-                    }
-                }
-            };
-
+            ShaderRender colorGradientRender = new ShaderTextureRender(new GradientShader(), testTexture);
             colorGradientRender.setName("Color Gradient Shader");
             shaderRenders.add(colorGradientRender);
         } catch (Exception e) {
             Gdx.app.error("Gradient Shader", "Error creating color gradient shader: " + e.getMessage());
+        }
+
+        // 加载夜空效果着色器
+        try {
+            ShaderTextureRender nightSkyRender = new ShaderTextureRender(new NightViewShader(), testTexture);
+            nightSkyRender.setName("Night Sky Shader");
+            shaderRenders.add(nightSkyRender);
+        } catch (Exception e) {
+            Gdx.app.error("Night Sky Shader", "Error creating night sky shader: " + e.getMessage());
+        }
+
+        // 加载白金闪烁效果着色器
+        try {
+            ShaderTextureRender str = new ShaderTextureRender(new PlatinumShader(), testTexture);
+            str.setName("Platinum Shader");
+            shaderRenders.add(str);
+        } catch (Exception e) {
+            Gdx.app.error("Platinum Shader", "Error creating platinum shader: " + e.getMessage());
         }
 
         // 创建所有着色器

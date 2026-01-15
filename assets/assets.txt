@@ -1,6 +1,10 @@
 libgdx.png
 shader/demo2/demo.frag
 shader/demo2/demo.vert
+shader/night_sky/night_sky.frag
+shader/night_sky/night_sky.vert
+shader/platinum/platinum.frag
+shader/platinum/platinum.vert
 shader/test_color/test_color.frag
 shader/test_color/test_color.vert
 ui/font-list.fnt

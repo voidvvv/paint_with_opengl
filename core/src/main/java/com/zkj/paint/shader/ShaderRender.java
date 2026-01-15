@@ -4,11 +4,16 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 
 public abstract class ShaderRender {
-    private ShaderProgram shaderProgram;
-    private String name;
 
-    public ShaderRender(ShaderProgram shaderProgram) {
-        this.shaderProgram = shaderProgram;
+    private String name;
+    private Shader shader;
+
+    public Shader getShader() {
+        return shader;
+    }
+
+    public void setShader(Shader shader) {
+        this.shader = shader;
     }
 
     public String getName() {
@@ -19,13 +24,6 @@ public abstract class ShaderRender {
         this.name = name;
     }
 
-    public ShaderProgram getShaderProgram() {
-        return shaderProgram;
-    }
-
-    public void setShaderProgram(ShaderProgram shaderProgram) {
-        this.shaderProgram = shaderProgram;
-    }
 
     public abstract void render(float delta, Matrix4 pro);
 
@@ -35,12 +33,15 @@ public abstract class ShaderRender {
      */
     public void dispose() {
         // Default implementation - can be overridden by subclasses
-        if (shaderProgram != null) {
-            shaderProgram.dispose();
+        if (shader != null) {
+            shader.dispose();
         }
     }
 
-    public abstract void create();
+    public void create() {
+
+        this.getShader().create();
+    };
 
     @Override
     public String toString() {
