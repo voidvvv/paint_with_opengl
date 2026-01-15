@@ -46,10 +46,10 @@ public class NightViewShader implements Shader{
         // 定义包含位置和纹理坐标的顶点数据
         float[] vertices = {
             // 位置           纹理坐标
-            -1.0f, -1.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, 1.0f, 0.0f,
-            -1.0f, 1.0f, 0.0f, 1.0f,
-            1.0f, 1.0f, 1.0f, 1.0f
+            -1.0f, -1.0f, 0.0f, 1.0f,
+            1.0f, -1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, 0.0f, 0f,
+            1.0f, 1.0f, 1.0f, 0f
         };
 
         // 绑定VBO并上传数据到GPU

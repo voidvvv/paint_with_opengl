@@ -17,10 +17,10 @@ public class PlatinumShader implements Shader{
     // 定义包含位置和纹理坐标的顶点数据
     private float[] vertices = {
         // 位置           纹理坐标
-        -1.0f, -1.0f, 0.0f, 0.0f,
-        1.0f, -1.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f,
-        1.0f, 1.0f, 1.0f, 1.0f
+        -1.0f, -1.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 1.0f, 1.0f,
+        -1.0f, 1.0f, 0.0f, 0.0f,
+        1.0f, 1.0f, 1.0f, 0.0f
     };
 
     public ShaderProgram getShaderProgram() {
